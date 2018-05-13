@@ -42,7 +42,71 @@ function Transaction() => {
 	this.getStore = () => store;
 }
 
+function Database() {
+	let store = {};
+	let transactions = [];
 
+	//Transaction Commands
+	this.begin = () => {
+		transactions.push(new Transaction());
+	}
+
+	this.rollback = () = {
+		transactions.pop();
+	}
+
+	this.commit = () => {
+		transactions.forEach(transaction => {
+			store = Object.assign({}, store, transaction.getStore());
+		});
+		transactions = [];
+	}
+
+	//Data Commands
+	this.set = (name, value) => {
+		if(transactions.length > 0) {
+			transactions[transactions.length - 1].set(name, value);
+		} else {
+			store[name] = value;
+		}
+	};
+
+	this.unset = (name) => {
+		if(transactions.length > 0) {
+			transactions[transactions.length - 1].unset(name);
+		} else {
+			delete store[name];
+		}
+	};
+
+	this.get = (name) => {
+		if(transactions.length > 0) {
+			for(let i = 1; i < transactions.length + 1; i++) {
+				const val = transactions[transactions.length - i].get(name);
+				if(val) {
+					return val;
+				}
+			}
+		}
+
+		return store[name];
+	};
+
+	this.numequalto = (value) => {
+		const unique = {};
+		transactions.forEach(transaction => {
+			unique = Object.assign({}, unique, transaction.numequalto(value));
+		});
+
+		return Object.keys(unique).length;
+	};
+}
+
+
+function main() {
+	let end = false;
+	let db = new Database();
+}
 
 
 
