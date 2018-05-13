@@ -16,7 +16,7 @@ const COMMANDS = {
 	COMMIT: 'COMMIT',
 }
 
-function Transaction() => {
+function Transaction() {
 	let store = {};
 
 	this.set = (name, value) => {
@@ -51,15 +51,25 @@ function Database() {
 		transactions.push(new Transaction());
 	}
 
-	this.rollback = () = {
-		transactions.pop();
+	this.rollback = () => {
+		if(transactions.length == 0) {
+			return "NO TRANSACTION";
+		} else {
+			transactions.pop();
+			return "";
+		}
 	}
 
 	this.commit = () => {
-		transactions.forEach(transaction => {
-			store = Object.assign({}, store, transaction.getStore());
-		});
-		transactions = [];
+		if(transactions.length == 0) {
+			return "NO TRANSACTION";
+		} else {
+			transactions.forEach(transaction => {
+				store = Object.assign({}, store, transaction.getStore());
+			});
+			transactions = [];
+			return "";
+		}
 	}
 
 	//Data Commands
@@ -93,12 +103,13 @@ function Database() {
 	};
 
 	this.numequalto = (value) => {
-		const unique = {};
-		transactions.forEach(transaction => {
-			unique = Object.assign({}, unique, transaction.numequalto(value));
-		});
+		let unique = Object.assign({}, store);
 
-		return Object.keys(unique).length;
+		transactions.forEach(transaction => {
+			unique = Object.assign({}, store, transaction.getStore());
+		});
+		
+		return Object.values(unique).filter(value => value == value).length;
 	};
 }
 
@@ -106,7 +117,51 @@ function Database() {
 function main() {
 	let end = false;
 	let db = new Database();
+
+	let wait = () => {
+		Reader.question('Please enter a command: ', (answer) => {
+			const query = answer.split(" ");
+			switch (query[0]) {
+				case COMMANDS.SET:
+					db.set(query[1], query[2]);
+					wait();
+					break;
+				case COMMANDS.GET:
+					console.log(db.get(query[1]));
+					wait();
+					break;
+				case COMMANDS.UNSET:
+					db.unset(query[1]);
+					wait();
+					break;
+				case COMMANDS.NUMEQUALTO:
+					console.log(db.numequalto(query[1]));
+					wait();
+					break;
+				case COMMANDS.END:
+					console.log('Goodbye!');
+					Reader.close();
+					break;
+				case COMMANDS.BEGIN:
+					db.begin();
+					wait();
+					break;
+				case COMMANDS.ROLLBACK:
+					console.log(db.rollback());
+					wait();
+					break;
+				case COMMANDS.COMMIT:
+					console.log(db.commit());
+					wait();
+					break;
+			}
+		});
+	}
+
+	wait();
 }
+
+main();
 
 
 
